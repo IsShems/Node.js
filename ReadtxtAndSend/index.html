@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Receive Cookie</title>
+  </head>
+  <body>
+    <h1>Receive Cookie</h1>
+    <button id="getCookieButton">Get Cookie</button>
+
+    <script>
+      document
+        .getElementById("getCookieButton")
+        .addEventListener("click", async () => {
+          try {
+            const response = await fetch("http://localhost:5000/send-cookie", {
+              method: "GET",
+              credentials: "include",
+            });
+
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            console.log("Cookie has been set with file data");
+          } catch (error) {
+            console.error("Failed to fetch cookie:", error);
+          }
+        });
+    </script>
+  </body>
+</html>
