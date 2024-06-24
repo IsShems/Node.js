@@ -1,117 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Простой чат</title>
-    <style>
-      body {
-        margin: 0;
-        font-family: Arial, sans-serif;
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Групповой чат</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    #messages {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+    #messages li {
+      padding: 5px 10px;
+    }
+    #messages li:nth-child(odd) {
+      background: #eee;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat"></div>
+  <input id="groupName" placeholder="Название группы">
+  <button onclick="joinGroup()">Присоединиться к группе</button>
+
+  <form id="chatForm" action="">
+    <input id="messageInput" autocomplete="off" />
+    <button>Отправить сообщение</button>
+  </form>
+
+  <ul id="messages"></ul>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+  <script>
+    let me = "Ramin";
+    let groupNameInput = document.getElementById("groupName");
+    let messageInput = document.getElementById("messageInput");
+    let chatForm = document.getElementById("chatForm");
+    let messagesList = document.getElementById("messages");
+
+    let socket = io();
+
+    chatForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      let message = messageInput.value;
+      if (message.trim() !== "") {
+        socket.emit("chat message", { message: message, fromUser: me, groupName: groupNameInput.value });
+        messageInput.value = "";
       }
-      #messages {
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
-      }
-      #messages li {
-        padding: 5px 10px;
-      }
-      #messages li:nth-child(odd) {
-        background: #eee;
-      }
-    </style>
-  </head>
-  <body>
-    <ul id="list"></ul>
-    <div id="chat"></div>
+    });
 
-    <button id="send">SEND</button>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    socket.on("chat message", function (msg) {
+      appendMessage(msg);
+    });
 
-    <script>
-      let me = "Ramin";
-      let array = ["Sahib", "Fidan", "Elvin"];
-      let list = document.querySelector("#list");
-      let chat = document.querySelector("#chat");
+    function appendMessage(msg) {
+      let listItem = document.createElement("li");
+      listItem.innerHTML = `<span>${msg.fromUser}: ${msg.message}</span>`;
+      messagesList.appendChild(listItem);
+    }
 
-      let send = document.querySelector("#send");
-      array.forEach((item) => {
-        let li = document.createElement("li");
-        li.innerHTML = `<li><button onclick="fetchToChat('${item}')">${item}</button></li>`;
-        list.appendChild(li);
-      });
-
-      const fetchToChat = (item) => {
-        fetch("http://localhost:3000/chat", {
-          method: "POST",
-          headers: {
-            "Content-type": "application/json",
-          },
-          body: JSON.stringify({ userFirst: me, userSecond: item }),
-        });
-
-        chat.innerHTML = ` <ul id="messages"></ul>
-<form id="form1" action="">
-  <input id="m1" autocomplete="off" /><button>Отправить ${item}</button>
-</form>
-<form id="form2" action="">
-  <input id="m2" autocomplete="off" /><button>Отправить ${me}</button>
-</form>`;
-
-        let socket = io();
-        let arr;
-        socket.on("chat message", function (msg) {
-          console.log(msg);
-          appendMessage(msg);
-        });
-
-        socket.on("chat history", function (history) {
-          arr = history;
-          history.forEach(function (msg) {
-            appendMessage(msg);
-          });
-        });
-
-        document
-          .getElementById("form1")
-          .addEventListener("submit", function (event) {
-            event.preventDefault();
-            let messageInput = document.getElementById("m1");
-            let message = messageInput.value;
-            if (message.trim() !== "") {
-              socket.emit(
-                "chat message",
-                JSON.stringify({ message: message, fromuser: item })
-              );
-              messageInput.value = "";
-            }
-            console.log(arr);
-          });
-
-        document
-          .getElementById("form2")
-          .addEventListener("submit", function (event) {
-            event.preventDefault();
-            let messageInput = document.getElementById("m2");
-            let message = messageInput.value;
-            if (message.trim() !== "") {
-              socket.emit(
-                "chat message",
-                JSON.stringify({ message: message, fromuser: me })
-              );
-              messageInput.value = "";
-            }
-            console.log(arr);
-          });
-
-        function appendMessage(msg) {
-          let messagesList = document.getElementById("messages");
-          let listItem = document.createElement("li");
-          listItem.innerHTML = `<span>${msg.message}</span><span>${msg.fromuser}</span>`;
-          messagesList.appendChild(listItem);
-        }
-      };
-    </script>
-  </body>
+    function joinGroup() {
+      let groupName = groupNameInput.value;
+      socket.emit("join group", groupName);
+      console.log(`Присоединяюсь к группе: ${groupName}`);
+    }
+  </script>
+</body>
 </html>
