@@ -1,14 +1,13 @@
 const express = require("express");
 const cors = require("cors");
-
 const bodyParser = require("body-parser");
-
 const http = require("http");
 const socketIO = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
+
 app.use(cors());
 app.use(bodyParser());
 
@@ -24,11 +23,10 @@ const pool = new Pool({
 
 app.post("/chat", (req, res) => {
   console.log(req.body);
-  let user1 = req.body.userFirst.toLowerCase();
-  let user2 = req.body.userSecond.toLowerCase();
+  let groupName = req.body.groupName.toLowerCase();
 
   pool.query(
-    `CREATE TABLE IF NOT EXISTS ${user1}and${user2} (
+    `CREATE TABLE IF NOT EXISTS ${groupName} (
         id SERIAL PRIMARY KEY,
         message TEXT NOT NULL,
         fromUser VARCHAR(100) NOT NULL,
@@ -43,43 +41,42 @@ app.post("/chat", (req, res) => {
     }
   );
 
-  io.on("connection", (socket) => {
-    console.log("Пользователь подключился");
-
-    console.log(req.body, 2);
-    pool.query(`SELECT * FROM ${user1}and${user2}`, (err, res) => {
-      if (err) {
-        throw err;
-      }
-      console.log(res.rows);
-      socket.emit("chat history", res.rows);
-    });
-
-    socket.on("chat message", (msg) => {
-      console.log("Сообщение: " + msg);
-      let mess = JSON.parse(msg);
-      pool.query(
-        `INSERT INTO ${user1}and${user2} (message, fromUser) VALUES ($1, $2) RETURNING *`,
-        [mess.message, mess.fromuser]
-      );
-
-      io.emit("chat message", {
-        message: mess.message,
-        fromuser: mess.fromuser,
-      });
-    });
-
-    socket.on("disconnect", () => {
-      console.log("Пользователь отключился");
-    });
-  });
   res.send("ok");
 });
 
-app.use(express.static(__dirname + "/public"));
+io.on("connection", (socket) => {
+  console.log("Пользователь подключился");
 
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/index.html");
+  socket.on("join group", (groupName) => {
+    socket.join(groupName);
+    console.log(`Пользователь присоединился к группе: ${groupName}`);
+  });
+
+  socket.on("chat message", (data) => {
+    console.log("Сообщение: " + data.message);
+    let message = data.message;
+    let fromUser = data.fromUser;
+    let groupName = data.groupName;
+
+    pool.query(
+      `INSERT INTO ${groupName} (message, fromUser) VALUES ($1, $2) RETURNING *`,
+      [message, fromUser],
+      (err, result) => {
+        if (err) {
+          throw err;
+        }
+        console.log(result.rows);
+        io.to(groupName).emit("chat message", {
+          message: message,
+          fromUser: fromUser,
+        });
+      }
+    );
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Пользователь отключился");
+  });
 });
 
 server.listen(3000, () => {
