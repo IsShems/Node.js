@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import io from "socket.io-client";
 import axios from "axios";
 import FileUpload from "./FileUpload";
-import person4 from "./assets/scale_1200.jpg";
+import person4 from "./assets/caucasian-woman-walking-in-city-street-F2NHFA.jpg";
 import Picker from "emoji-picker-react";
 
 const ChatWindow = ({ array }) => {
