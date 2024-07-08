@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import './App.css';
 import './styles/styles.css';
 import person1 from './assets/messagesearch.png';
-import person2 from './assets/01-11(1).jpg';
-import person3 from './assets/720x720_0xac120003_13730406881612364823.jpg';
+import person2 from './assets/depositphotos_268623924-stock-photo-portrait-close-up-of-young.jpg';
+import person3 from './assets/istockphoto-1222823238-612x612.jpg';
 import SignUp from './components/SignUp';
 import SignIn from './components/SignIn';
 import Chat from './Chat';
@@ -21,9 +21,9 @@ const App = () => {
   }, [])
 
   const array = [
-    { name: "Sahib", image: person1 },
-    { name: "Fidan", image: person2 },
-    { name: "Elvin", image: person3 }
+    { name: "Sasha", image: person1 },
+    { name: "Nina", image: person2 },
+    { name: "Bob", image: person3 }
   ];
 
   return (
